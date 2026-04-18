@@ -32,33 +32,6 @@ Other packages are not available in the sandbox (no Node.js, no npm).
 3. The transpiled code is injected into an `<iframe>` as an ES module with an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) pointing to [esm.sh](https://esm.sh) CDN.
 4. React mounts the default export into `#root` via `createRoot`.
 
-## Default snippet format
-
-The playground expects the file to export a React component as the default export:
-
-```jsx
-import React from 'react';
-import { Sparkles } from 'lucide-react';
-
-export default function App() {
-  return (
-    <div className="p-8 text-center bg-white rounded-xl shadow-lg">
-      <h1 className="text-3xl font-bold text-gray-800">
-        Hello! <Sparkles className="text-yellow-500 inline" />
-      </h1>
-    </div>
-  );
-}
-```
-
-All three export styles are supported:
-
-```js
-export default function App() { ... }
-export default class App extends React.Component { ... }
-const App = () => { ... }; export default App;
-```
-
 ## Local development
 
 Any static file server works:

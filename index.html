@@ -442,19 +442,51 @@
                 <span class="pane-label">Editor</span>
                 <span class="pane-badge">JSX</span>
             </div>
-            <textarea id="editor" spellcheck="false">import React from 'react';
-import { Sparkles } from 'lucide-react';
+                        <textarea id="editor" spellcheck="false">import React, { useState } from 'react';
+import { Sparkles, Code2 } from 'lucide-react';
 
 export default function App() {
-  return (
-    <div className="p-8 text-center bg-white rounded-xl shadow-lg">
-      <h1 className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
-        Hello Tailwind! <Sparkles className="text-yellow-500" />
-      </h1>
-      <p className="text-gray-500 mt-2">This was rendered entirely in the browser.</p>
-    </div>
-  );
-}</textarea>
+    const [count, setCount] = useState(0);
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+            <div className="max-w-2xl w-full bg-white rounded-2xl shadow-md overflow-hidden">
+                <div className="p-6 bg-gradient-to-r from-indigo-600 to-violet-500 text-white flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 rounded flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold">JSX Playground</h2>
+                            <div className="text-sm opacity-90">Live React + lucide-react preview</div>
+                        </div>
+                    </div>
+                    <a href="https://jeremie.bornais.ca" target="_blank" rel="noopener noreferrer" className="text-sm bg-white/10 px-3 py-1 rounded">
+                        Created by Jeremie Bornais
+                    </a>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    <p className="text-sm text-gray-600">Edit the code on the left - this playground compiles JSX in the browser.</p>
+
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setCount(c => c + 1)} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                            Increment
+                        </button>
+                        <div className="text-lg font-semibold">{count} {count === 1 ? 'click' : 'clicks'}</div>
+                        <div className="ml-auto text-gray-400 flex items-center gap-2"><Code2 className="w-4 h-4" /> live</div>
+                    </div>
+                </div>
+
+                <div className="p-4 border-t bg-gray-50 text-sm text-gray-600 flex justify-center">
+                    <span>Made with ❤️ - <a className="text-indigo-600 underline" href="https://jeremie.bornais.ca" target="_blank" rel="noopener noreferrer">jeremie.bornais.ca</a></span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+</textarea>
             <div class="status-bar">
                 <span id="status-source">snippet</span>
                 <span id="status-stats">-</span>
