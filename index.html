@@ -93,34 +93,6 @@
             gap: 8px;
         }
 
-        .source-pill {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            height: 28px;
-            padding: 0 10px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 11.5px;
-            color: var(--text-2);
-            max-width: 200px;
-        }
-
-        .source-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #3fb950;
-            flex-shrink: 0;
-        }
-
-        .source-name {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
         .hbtn {
             display: inline-flex;
             align-items: center;
@@ -409,11 +381,15 @@
             JSX Playground
         </div>
         <div class="header-right">
-            <div class="source-pill">
-                <span class="source-dot"></span>
-                <span class="source-name" id="source-label">Inline snippet</span>
-            </div>
             <input id="file-input" type="file" accept=".jsx,.js,.tsx,.ts,.txt" style="display:none" />
+            <button class="hbtn" id="download-button" title="Download preview as standalone HTML">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download
+            </button>
             <button class="hbtn" id="upload-button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -422,7 +398,7 @@
                 </svg>
                 Upload
             </button>
-            <button class="hbtn hbtn-accent" id="fullscreen-button">
+            <button class="hbtn hbtn-accent" id="fullscreen-button" title="Full screen (Alt+Enter)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="15 3 21 3 21 9"/>
                     <polyline points="9 21 3 21 3 15"/>
@@ -438,54 +414,44 @@
     <main id="workspace">
 
         <div id="editor-pane">
-            <div class="pane-bar">
-                <span class="pane-label">Editor</span>
-                <span class="pane-badge">JSX</span>
-            </div>
-                        <textarea id="editor" spellcheck="false">import React, { useState } from 'react';
-import { Sparkles, Code2 } from 'lucide-react';
+            <textarea id="editor" spellcheck="false">import React, { useState } from 'react';
+import { Sparkles } from 'lucide-react';
 
 export default function App() {
-    const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0);
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-            <div className="max-w-2xl w-full bg-white rounded-2xl shadow-md overflow-hidden">
-                <div className="p-6 bg-gradient-to-r from-indigo-600 to-violet-500 text-white flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold">JSX Playground</h2>
-                            <div className="text-sm opacity-90">Live React + lucide-react preview</div>
-                        </div>
-                    </div>
-                    <a href="https://jeremie.bornais.ca" target="_blank" rel="noopener noreferrer" className="text-sm bg-white/10 px-3 py-1 rounded">
-                        Created by Jeremie Bornais
-                    </a>
-                </div>
-
-                <div className="p-6 space-y-4">
-                    <p className="text-sm text-gray-600">Edit the code on the left - this playground compiles JSX in the browser.</p>
-
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setCount(c => c + 1)} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                            Increment
-                        </button>
-                        <div className="text-lg font-semibold">{count} {count === 1 ? 'click' : 'clicks'}</div>
-                        <div className="ml-auto text-gray-400 flex items-center gap-2"><Code2 className="w-4 h-4" /> live</div>
-                    </div>
-                </div>
-
-                <div className="p-4 border-t bg-gray-50 text-sm text-gray-600 flex justify-center">
-                    <span>Made with ❤️ - <a className="text-indigo-600 underline" href="https://jeremie.bornais.ca" target="_blank" rel="noopener noreferrer">jeremie.bornais.ca</a></span>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 w-full max-w-sm text-center space-y-6">
+        <div className="flex justify-center">
+          <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center">
+            <Sparkles className="w-7 h-7 text-indigo-600" />
+          </div>
         </div>
-    );
-}
 
+        <div>
+          <div className="text-5xl font-bold text-slate-900">{count}</div>
+          <div className="text-slate-400 text-sm mt-1">clicks</div>
+        </div>
+
+        <button
+          onClick={() => setCount(c => c + 1)}
+          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors"
+        >
+          Click me
+        </button>
+
+        <p className="text-xs text-slate-400">
+          Made by{' '}
+          <a href="https://jeremie.bornais.ca" target="_blank" rel="noopener noreferrer"
+            className="text-indigo-500 hover:underline">
+            Jeremie Bornais
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+}
 </textarea>
             <div class="status-bar">
                 <span id="status-source">snippet</span>
@@ -507,7 +473,7 @@ export default function App() {
     </div>
 
     <!-- Floating draggable exit button (shown only in fullscreen) -->
-    <button id="float-exit-btn" title="Exit full-screen (Esc)">
+    <button id="float-exit-btn" title="Exit full-screen (Alt+Enter)">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="4 14 10 14 10 20"/>
             <polyline points="20 10 14 10 14 4"/>
@@ -529,7 +495,7 @@ export default function App() {
         const fileInput         = document.getElementById('file-input');
         const uploadButton      = document.getElementById('upload-button');
         const fullscreenButton  = document.getElementById('fullscreen-button');
-        const sourceLabel       = document.getElementById('source-label');
+        const downloadButton    = document.getElementById('download-button');
         const statusSource      = document.getElementById('status-source');
         const statusStats       = document.getElementById('status-stats');
         const dropOverlay       = document.getElementById('drop-overlay');
@@ -557,7 +523,6 @@ export default function App() {
         }
 
         function updateSourceLabel(name) {
-            sourceLabel.textContent  = name;
             statusSource.textContent = name;
         }
 
@@ -612,6 +577,7 @@ export default function App() {
 </head>
 <body>
 <div id="root"></div>
+<script>window.addEventListener('keydown',function(e){if(e.altKey&&e.key==='Enter'){e.preventDefault();window.parent.postMessage('toggleFullscreen','*');}});<\/script>
 <script type="module">
 ${moduleImports.join('\n')}
 import{createRoot}from'react-dom/client';
@@ -625,6 +591,21 @@ catch(e){showError(e);}
 <\/script>
 </body></html>`;
         }
+
+        /* ── DOWNLOAD ─────────────────────────────────────────── */
+
+        function downloadPreview() {
+            const doc = previewFrame.srcdoc;
+            if (!doc) return;
+            const url = URL.createObjectURL(new Blob([doc], { type: 'text/html' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'preview.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        downloadButton.addEventListener('click', downloadPreview);
 
         /* ── RENDER ───────────────────────────────────────────── */
 
@@ -708,8 +689,14 @@ catch(e){showError(e);}
 
         fullscreenButton.addEventListener('click', enterFullscreen);
 
+        function toggleFullscreen() { isFullscreen ? exitFullscreen() : enterFullscreen(); }
+
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isFullscreen) exitFullscreen();
+            if (e.altKey && e.key === 'Enter') { e.preventDefault(); toggleFullscreen(); }
+        });
+
+        window.addEventListener('message', (e) => {
+            if (e.data === 'toggleFullscreen') toggleFullscreen();
         });
 
         /* ── DRAGGABLE FLOAT BUTTON ───────────────────────────── */
@@ -718,6 +705,8 @@ catch(e){showError(e);}
         let floatDragMoved = false;
         let floatOffsetX   = 0;
         let floatOffsetY   = 0;
+        let floatStartX    = 0;
+        let floatStartY    = 0;
 
         floatExitBtn.addEventListener('mousedown', (e) => {
             e.preventDefault();
@@ -726,6 +715,8 @@ catch(e){showError(e);}
             const rect   = floatExitBtn.getBoundingClientRect();
             floatOffsetX = e.clientX - rect.left;
             floatOffsetY = e.clientY - rect.top;
+            floatStartX  = e.clientX;
+            floatStartY  = e.clientY;
             floatExitBtn.classList.add('dragging');
             // Block the fullscreen iframe from swallowing pointer events while dragging
             fullscreenFrame.style.pointerEvents = 'none';
@@ -733,6 +724,7 @@ catch(e){showError(e);}
 
         document.addEventListener('mousemove', (e) => {
             if (!floatDragging) return;
+            if (!floatDragMoved && Math.hypot(e.clientX - floatStartX, e.clientY - floatStartY) < 6) return;
             floatDragMoved = true;
             const x    = e.clientX - floatOffsetX;
             const y    = e.clientY - floatOffsetY;

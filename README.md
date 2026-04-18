@@ -7,10 +7,11 @@ A fast, zero-setup JSX playground that runs entirely in your browser. Paste or u
 ## Features
 
 - **Live preview** - auto-renders as you type (180 ms debounce)
-- **Upload a file** - click the Upload button or drag-and-drop any `.jsx` / `.js` / `.tsx` / `.ts` file onto the app
-- **Full-screen preview** - one click to expand the preview to fill the entire screen
-- **Draggable exit button** - a floating icon button lets you exit full-screen; drag it anywhere on the screen
-- **Resizable panes** - drag the divider between the editor and preview to adjust the split
+- **Upload a file** - click Upload or drag-and-drop any `.jsx` / `.js` / `.tsx` / `.ts` file onto the app
+- **Download preview** - save the rendered preview as a standalone `.html` file (uses the OS Save As dialog where supported)
+- **Full-screen preview** - one click (or press `F`) to expand the preview; press `F` or `Esc` to exit
+- **Draggable exit button** - a floating button lets you exit full-screen; drag it anywhere on screen, click it to exit
+- **Resizable panes** - drag the divider between editor and preview to adjust the split
 - **React 18** - hooks, context, suspense all work
 - **Tailwind CSS** - available inside the preview automatically
 - **lucide-react** - all icons available (pinned to `0.511.0`)
