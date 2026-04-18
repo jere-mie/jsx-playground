@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSX Playground</title>
+    <meta name="description" content="Paste or upload a JSX file and preview your React component instantly in the browser. Supports React, Tailwind CSS, and lucide-react.">
+    <meta name="keywords" content="JSX playground, React playground, live preview, Tailwind CSS, lucide-react, browser JSX">
+    <meta name="author" content="Jeremie Bornais">
+    <link rel="canonical" href="https://jsx.zxcv.fyi/">
+    <meta property="og:title" content="JSX Playground">
+    <meta property="og:description" content="Paste or upload a JSX file and preview your React component instantly in the browser.">
+    <meta property="og:url" content="https://jsx.zxcv.fyi/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="JSX Playground">
+    <meta name="twitter:description" content="Paste or upload a JSX file and preview your React component instantly in the browser.">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root {
+            --bg:          #0d1117;
+            --surface:     #161b22;
+            --surface-2:   #1c2129;
+            --border:      #21262d;
+            --border-2:    #30363d;
+            --accent:      #6366f1;
+            --accent-2:    #818cf8;
+            --text:        #e6edf3;
+            --text-2:      #8b949e;
+            --text-3:      #484f58;
+            --editor-bg:   #0d1117;
+            --editor-text: #adbac7;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body { height: 100%; overflow: hidden; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* ─── HEADER ─────────────────────────────────────────── */
+
+        #header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            height: 50px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+
+        .logo-gem {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .source-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            height: 28px;
+            padding: 0 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 11.5px;
+            color: var(--text-2);
+            max-width: 200px;
+        }
+
+        .source-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #3fb950;
+            flex-shrink: 0;
+        }
+
+        .source-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .hbtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            height: 30px;
+            padding: 0 11px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+            white-space: nowrap;
+        }
+
+        .hbtn:hover {
+            border-color: var(--border-2);
+            background: var(--border);
+        }
+
+        .hbtn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+        .hbtn-accent {
+            background: var(--accent);
+            border-color: transparent;
+        }
+
+        .hbtn-accent:hover {
+            background: var(--accent-2);
+            border-color: transparent;
+        }
+
+        /* ─── WORKSPACE ──────────────────────────────────────── */
+
+        #workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* ─── EDITOR PANE ────────────────────────────────────── */
+
+        #editor-pane {
+            display: flex;
+            flex-direction: column;
+            background: var(--editor-bg);
+            width: 50%;
+            min-width: 15%;
+            max-width: 85%;
+            flex-shrink: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .pane-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 36px;
+            padding: 0 14px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .pane-bar.preview-bar {
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .pane-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-3);
+        }
+
+        .pane-label.light { color: #94a3b8; }
+
+        .pane-badge {
+            font-size: 11px;
+            color: var(--text-3);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pane-badge.light { color: #94a3b8; }
+
+        #editor {
+            flex: 1;
+            display: block;
+            background: var(--editor-bg);
+            color: var(--editor-text);
+            border: none;
+            outline: none;
+            resize: none;
+            padding: 18px 20px;
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.75;
+            tab-size: 2;
+            -moz-tab-size: 2;
+            min-height: 0;
+            width: 100%;
+            user-select: text;
+        }
+
+        #editor::-webkit-scrollbar { width: 7px; height: 7px; }
+        #editor::-webkit-scrollbar-track { background: transparent; }
+        #editor::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        #editor::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 24px;
+            padding: 0 14px;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .status-bar span {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* ─── DIVIDER ────────────────────────────────────────── */
+
+        #divider {
+            width: 5px;
+            flex-shrink: 0;
+            background: var(--border);
+            cursor: col-resize;
+            position: relative;
+            z-index: 10;
+            transition: background .15s;
+        }
+
+        #divider:hover,
+        #divider.active { background: var(--accent); }
+
+        #divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        #divider:hover::after,
+        #divider.active::after { background: rgba(255, 255, 255, 0.55); }
+
+        /* ─── PREVIEW PANE ───────────────────────────────────── */
+
+        #preview-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            overflow: hidden;
+            min-width: 15%;
+        }
+
+        #preview-frame { flex: 1; border: none; min-height: 0; }
+
+        /* ─── FULLSCREEN ─────────────────────────────────────── */
+
+        #fullscreen-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 8000;
+            background: #f8fafc;
+            display: none;
+        }
+
+        #fullscreen-overlay.active { display: flex; flex-direction: column; }
+
+        #fullscreen-frame { flex: 1; border: none; width: 100%; }
+
+        /* ─── DRAGGABLE EXIT BUTTON ──────────────────────────── */
+
+        #float-exit-btn {
+            position: fixed;
+            z-index: 9000;
+            /* top/left set dynamically by JS */
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            background: rgba(22, 27, 34, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 50%;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+            transition: background .15s, box-shadow .15s;
+        }
+
+        #float-exit-btn:hover {
+            background: rgba(99, 102, 241, 0.85);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65);
+        }
+
+        #float-exit-btn.shown { display: inline-flex; }
+
+        #float-exit-btn.dragging {
+            cursor: grabbing;
+            opacity: 0.85;
+            transition: none;
+        }
+
+        #float-exit-btn svg { width: 15px; height: 15px; }
+
+        /* ─── DRAG-AND-DROP OVERLAY ──────────────────────────── */
+
+        #drop-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 7000;
+            background: rgba(13, 17, 23, 0.88);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        #drop-overlay.active { display: flex; }
+
+        .drop-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 48px 64px;
+            border: 2px dashed var(--accent);
+            border-radius: 20px;
+            color: var(--text);
+            animation: dropPulse 1.4s ease-in-out infinite;
+        }
+
+        .drop-box svg { width: 44px; height: 44px; color: var(--accent); }
+        .drop-box strong { font-size: 18px; font-weight: 600; }
+        .drop-box span { font-size: 13px; color: var(--text-2); }
+
+        @keyframes dropPulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.75; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Drag-and-drop visual overlay -->
+    <div id="drop-overlay">
+        <div class="drop-box">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            <strong>Drop your file</strong>
+            <span>.jsx &nbsp;·&nbsp; .js &nbsp;·&nbsp; .tsx &nbsp;·&nbsp; .ts</span>
+        </div>
+    </div>
+
+    <!-- App header -->
+    <header id="header">
+        <div class="logo">
+            <div class="logo-gem">⚛</div>
+            JSX Playground
+        </div>
+        <div class="header-right">
+            <div class="source-pill">
+                <span class="source-dot"></span>
+                <span class="source-name" id="source-label">Inline snippet</span>
+            </div>
+            <input id="file-input" type="file" accept=".jsx,.js,.tsx,.ts,.txt" style="display:none" />
+            <button class="hbtn" id="upload-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload
+            </button>
+            <button class="hbtn hbtn-accent" id="fullscreen-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9"/>
+                    <polyline points="9 21 3 21 3 15"/>
+                    <line x1="21" y1="3" x2="14" y2="10"/>
+                    <line x1="3" y1="21" x2="10" y2="14"/>
+                </svg>
+                Full Preview
+            </button>
+        </div>
+    </header>
+
+    <!-- Split workspace -->
+    <main id="workspace">
+
+        <div id="editor-pane">
+            <div class="pane-bar">
+                <span class="pane-label">Editor</span>
+                <span class="pane-badge">JSX</span>
+            </div>
+            <textarea id="editor" spellcheck="false">import React from 'react';
+import { Sparkles } from 'lucide-react';
+
+export default function App() {
+  return (
+    <div className="p-8 text-center bg-white rounded-xl shadow-lg">
+      <h1 className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
+        Hello Tailwind! <Sparkles className="text-yellow-500" />
+      </h1>
+      <p className="text-gray-500 mt-2">This was rendered entirely in the browser.</p>
+    </div>
+  );
+}</textarea>
+            <div class="status-bar">
+                <span id="status-source">snippet</span>
+                <span id="status-stats">-</span>
+            </div>
+        </div>
+
+        <div id="divider" title="Drag to resize"></div>
+
+        <div id="preview-pane">
+            <iframe id="preview-frame"></iframe>
+        </div>
+
+    </main>
+
+    <!-- Full-screen overlay - only the iframe, nothing else -->
+    <div id="fullscreen-overlay">
+        <iframe id="fullscreen-frame"></iframe>
+    </div>
+
+    <!-- Floating draggable exit button (shown only in fullscreen) -->
+    <button id="float-exit-btn" title="Exit full-screen (Esc)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 14 10 14 10 20"/>
+            <polyline points="20 10 14 10 14 4"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+            <line x1="3" y1="21" x2="14" y2="10"/>
+        </svg>
+    </button>
+
+    <script>
+        'use strict';
+
+        /* ── DOM refs ─────────────────────────────────────────── */
+
+        const editor            = document.getElementById('editor');
+        const previewFrame      = document.getElementById('preview-frame');
+        const fullscreenFrame   = document.getElementById('fullscreen-frame');
+        const fullscreenOverlay = document.getElementById('fullscreen-overlay');
+        const floatExitBtn      = document.getElementById('float-exit-btn');
+        const fileInput         = document.getElementById('file-input');
+        const uploadButton      = document.getElementById('upload-button');
+        const fullscreenButton  = document.getElementById('fullscreen-button');
+        const sourceLabel       = document.getElementById('source-label');
+        const statusSource      = document.getElementById('status-source');
+        const statusStats       = document.getElementById('status-stats');
+        const dropOverlay       = document.getElementById('drop-overlay');
+        const editorPane        = document.getElementById('editor-pane');
+        const divider           = document.getElementById('divider');
+
+        let renderTimer  = null;
+        let isFullscreen = false;
+        let dragDepth    = 0;
+
+        /* ── UTILS ────────────────────────────────────────────── */
+
+        function escapeHtml(value) {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function updateStatusBar() {
+            const code  = editor.value;
+            const lines = code.split('\n').length;
+            const chars = code.length;
+            statusStats.textContent = `${lines} ${lines === 1 ? 'line' : 'lines'} · ${chars.toLocaleString()} chars`;
+        }
+
+        function updateSourceLabel(name) {
+            sourceLabel.textContent  = name;
+            statusSource.textContent = name;
+        }
+
+        /* ── CODE NORMALIZATION ───────────────────────────────── */
+
+        function normalizeUserCode(rawCode) {
+            const code = rawCode.trim();
+            const importStatements = code.match(/^\s*import\s+(?:[^'";]+\s+from\s+)?['"][^'"]+['"];?\s*$/gm) || [];
+            const hasReactImport = importStatements.some((s) => /from\s+['"]react['"]/.test(s));
+            let mountExpression = 'App';
+            let normalizedCode = code.replace(/^\s*import\s+(?:[^'";]+\s+from\s+)?['"][^'"]+['"];?\s*$/gm, '').trim();
+
+            normalizedCode = normalizedCode.replace(
+                /export\s+default\s+function\s+([A-Za-z_$][\w$]*)\s*\(/,
+                (_, name) => { mountExpression = name; return `function ${name}(`; }
+            );
+            normalizedCode = normalizedCode.replace(
+                /export\s+default\s+class\s+([A-Za-z_$][\w$]*)\s+/,
+                (_, name) => { mountExpression = name; return `class ${name} `; }
+            );
+            normalizedCode = normalizedCode.replace(
+                /export\s+default\s+([A-Za-z_$][\w$]*)\s*;?/,
+                (_, name) => { mountExpression = name; return ''; }
+            );
+
+            return { hasReactImport, importStatements, mountExpression, normalizedCode };
+        }
+
+        function buildPreviewDocument(rawCode) {
+            const { hasReactImport, importStatements, mountExpression, normalizedCode } = normalizeUserCode(rawCode);
+            const compiledCode = Babel.transform(normalizedCode, {
+                presets: ['react'],
+                filename: 'app.jsx'
+            }).code;
+            const moduleImports = hasReactImport
+                ? importStatements
+                : [`import React from 'react';`, ...importStatements];
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.tailwindcss.com"><\/script>
+<script type="importmap">
+{"imports":{"react":"https://esm.sh/react@18?dev","react/jsx-runtime":"https://esm.sh/react@18/jsx-runtime?dev","react/jsx-dev-runtime":"https://esm.sh/react@18/jsx-dev-runtime?dev","react-dom":"https://esm.sh/react-dom@18?dev&deps=react@18.3.1","react-dom/client":"https://esm.sh/react-dom@18/client?dev&deps=react@18.3.1","lucide-react":"https://esm.sh/lucide-react@0.511.0?dev&deps=react@18.3.1"}}
+<\/script>
+<style>
+  body{margin:0;min-height:100vh;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,sans-serif;}
+  #root{}
+  pre[data-error]{margin:0;padding:18px 20px;white-space:pre-wrap;color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+${moduleImports.join('\n')}
+import{createRoot}from'react-dom/client';
+const rootEl=document.getElementById('root');
+function showError(err){const msg=err instanceof Error?err.message:String(err);rootEl.innerHTML='<pre data-error>'+msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';}
+window.addEventListener('error',(e)=>{if(e.error||e.message)showError(e.error||e.message);});
+window.addEventListener('unhandledrejection',(e)=>showError(e.reason||'Unhandled rejection'));
+try{${compiledCode}
+const root=createRoot(rootEl);root.render(React.createElement(${mountExpression}));}
+catch(e){showError(e);}
+<\/script>
+</body></html>`;
+        }
+
+        /* ── RENDER ───────────────────────────────────────────── */
+
+        function showCompileError(error) {
+            const html = `<pre style="margin:0;padding:18px 20px;white-space:pre-wrap;color:#991b1b;background:#fef2f2;font:13px/1.6 ui-monospace,Consolas,monospace;">${escapeHtml(error.message)}</pre>`;
+            previewFrame.srcdoc = html;
+            if (isFullscreen) fullscreenFrame.srcdoc = html;
+        }
+
+        function renderCode() {
+            try {
+                const doc = buildPreviewDocument(editor.value);
+                previewFrame.srcdoc = doc;
+                if (isFullscreen) fullscreenFrame.srcdoc = doc;
+            } catch (error) {
+                showCompileError(error);
+            }
+            updateStatusBar();
+        }
+
+        function scheduleRender() {
+            clearTimeout(renderTimer);
+            renderTimer = setTimeout(renderCode, 180);
+        }
+
+        /* ── PANE RESIZE ──────────────────────────────────────── */
+
+        let isDividerDragging = false;
+        let dividerStartX     = 0;
+        let editorStartWidth  = 0;
+
+        divider.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDividerDragging = true;
+            dividerStartX     = e.clientX;
+            editorStartWidth  = editorPane.getBoundingClientRect().width;
+            divider.classList.add('active');
+            document.body.style.cursor     = 'col-resize';
+            document.body.style.userSelect = 'none';
+            previewFrame.style.pointerEvents = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDividerDragging) return;
+            const wsWidth  = document.getElementById('workspace').getBoundingClientRect().width;
+            const delta    = e.clientX - dividerStartX;
+            const newWidth = Math.min(
+                Math.max(editorStartWidth + delta, wsWidth * 0.15),
+                wsWidth * 0.85
+            );
+            editorPane.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDividerDragging) return;
+            isDividerDragging = false;
+            divider.classList.remove('active');
+            document.body.style.cursor      = '';
+            document.body.style.userSelect  = '';
+            previewFrame.style.pointerEvents = '';
+        });
+
+        /* ── FULLSCREEN ───────────────────────────────────────── */
+
+        function enterFullscreen() {
+            isFullscreen = true;
+            fullscreenFrame.srcdoc = previewFrame.srcdoc;
+            fullscreenOverlay.classList.add('active');
+            floatExitBtn.classList.add('shown');
+            // Position at bottom-right using top/left so dragging is always in same coordinate space
+            floatExitBtn.style.top  = (window.innerHeight - floatExitBtn.offsetHeight - 32) + 'px';
+            floatExitBtn.style.left = (window.innerWidth  - floatExitBtn.offsetWidth  - 32) + 'px';
+        }
+
+        function exitFullscreen() {
+            isFullscreen = false;
+            fullscreenOverlay.classList.remove('active');
+            floatExitBtn.classList.remove('shown');
+            fullscreenFrame.srcdoc = '';
+        }
+
+        fullscreenButton.addEventListener('click', enterFullscreen);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isFullscreen) exitFullscreen();
+        });
+
+        /* ── DRAGGABLE FLOAT BUTTON ───────────────────────────── */
+
+        let floatDragging  = false;
+        let floatDragMoved = false;
+        let floatOffsetX   = 0;
+        let floatOffsetY   = 0;
+
+        floatExitBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            floatDragging  = true;
+            floatDragMoved = false;
+            const rect   = floatExitBtn.getBoundingClientRect();
+            floatOffsetX = e.clientX - rect.left;
+            floatOffsetY = e.clientY - rect.top;
+            floatExitBtn.classList.add('dragging');
+            // Block the fullscreen iframe from swallowing pointer events while dragging
+            fullscreenFrame.style.pointerEvents = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!floatDragging) return;
+            floatDragMoved = true;
+            const x    = e.clientX - floatOffsetX;
+            const y    = e.clientY - floatOffsetY;
+            const maxX = window.innerWidth  - floatExitBtn.offsetWidth;
+            const maxY = window.innerHeight - floatExitBtn.offsetHeight;
+            floatExitBtn.style.left = Math.min(Math.max(x, 0), maxX) + 'px';
+            floatExitBtn.style.top  = Math.min(Math.max(y, 0), maxY) + 'px';
+        });
+
+        // Release on button itself: exit if it was a tap (not a drag)
+        floatExitBtn.addEventListener('mouseup', () => {
+            if (floatDragging && !floatDragMoved) exitFullscreen();
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!floatDragging) return;
+            floatDragging = false;
+            floatExitBtn.classList.remove('dragging');
+            fullscreenFrame.style.pointerEvents = '';
+        });
+
+        /* ── FILE UPLOAD ──────────────────────────────────────── */
+
+        async function loadFile(file) {
+            if (!file) return;
+            try {
+                const text = await file.text();
+                editor.value = text;
+                updateSourceLabel(file.name);
+                renderCode();
+            } catch (err) {
+                showCompileError(err instanceof Error ? err : new Error('Could not read file.'));
+            } finally {
+                fileInput.value = '';
+            }
+        }
+
+        uploadButton.addEventListener('click',  () => fileInput.click());
+        fileInput.addEventListener('change',    (e) => loadFile(e.target.files?.[0]));
+
+        /* ── DRAG AND DROP ────────────────────────────────────── */
+
+        document.addEventListener('dragenter', (e) => {
+            if (isFullscreen) return;
+            e.preventDefault();
+            dragDepth++;
+            dropOverlay.classList.add('active');
+            previewFrame.style.pointerEvents = 'none';
+        });
+
+        document.addEventListener('dragleave', () => {
+            if (isFullscreen) return;
+            dragDepth--;
+            if (dragDepth <= 0) {
+                dragDepth = 0;
+                dropOverlay.classList.remove('active');
+                previewFrame.style.pointerEvents = '';
+            }
+        });
+
+        document.addEventListener('dragover', (e) => e.preventDefault());
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragDepth = 0;
+            dropOverlay.classList.remove('active');
+            previewFrame.style.pointerEvents = '';
+            const file = e.dataTransfer?.files?.[0];
+            if (file) loadFile(file);
+        });
+
+        /* ── EDITOR ───────────────────────────────────────────── */
+
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const { selectionStart: s, selectionEnd: end } = editor;
+                editor.value = editor.value.slice(0, s) + '  ' + editor.value.slice(end);
+                editor.selectionStart = editor.selectionEnd = s + 2;
+                scheduleRender();
+            }
+        });
+
+        editor.addEventListener('input', scheduleRender);
+
+        /* ── INIT ─────────────────────────────────────────────── */
+
+        window.addEventListener('load', () => {
+            updateStatusBar();
+            renderCode();
+        });
+    </script>
+</body>
+</html>
