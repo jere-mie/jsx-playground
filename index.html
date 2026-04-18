@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSX Playground</title>
-    <meta name="description" content="Paste or upload a JSX file and preview your React component instantly in the browser. Supports React, Tailwind CSS, and lucide-react.">
-    <meta name="keywords" content="JSX playground, React playground, live preview, Tailwind CSS, lucide-react, browser JSX">
+    <meta name="description" content="Paste or upload JSX or full HTML files and preview them instantly in the browser. Supports React, Tailwind CSS, lucide-react, and direct HTML rendering.">
+    <meta name="keywords" content="JSX playground, HTML playground, React playground, live preview, Tailwind CSS, lucide-react, browser JSX, browser HTML">
     <meta name="author" content="Jeremie Bornais">
     <link rel="canonical" href="https://jsx.zxcv.fyi/">
     <meta property="og:title" content="JSX Playground">
-    <meta property="og:description" content="Paste or upload a JSX file and preview your React component instantly in the browser.">
+    <meta property="og:description" content="Paste or upload JSX or full HTML files and preview them instantly in the browser.">
     <meta property="og:url" content="https://jsx.zxcv.fyi/">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="JSX Playground">
-    <meta name="twitter:description" content="Paste or upload a JSX file and preview your React component instantly in the browser.">
+    <meta name="twitter:description" content="Paste or upload JSX or full HTML files and preview them instantly in the browser.">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -370,7 +370,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
             </svg>
             <strong>Drop your file</strong>
-            <span>.jsx &nbsp;·&nbsp; .js &nbsp;·&nbsp; .tsx &nbsp;·&nbsp; .ts</span>
+            <span>.jsx &nbsp;·&nbsp; .js &nbsp;·&nbsp; .tsx &nbsp;·&nbsp; .ts &nbsp;·&nbsp; .html &nbsp;·&nbsp; .htm</span>
         </div>
     </div>
 
@@ -381,7 +381,7 @@
             JSX Playground
         </div>
         <div class="header-right">
-            <input id="file-input" type="file" accept=".jsx,.js,.tsx,.ts,.txt" style="display:none" />
+            <input id="file-input" type="file" accept=".jsx,.js,.tsx,.ts,.html,.htm,.txt" style="display:none" />
             <button class="hbtn" id="download-button" title="Download preview as standalone HTML">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -528,6 +528,11 @@ export default function App() {
 
         /* ── CODE NORMALIZATION ───────────────────────────────── */
 
+        function detectInputMode(rawCode) {
+            const code = rawCode.replace(/^\uFEFF/, '').trimStart();
+            return /^(<!doctype\s+html(?:\s|>)|<html(?:\s|>))/i.test(code) ? 'html' : 'jsx';
+        }
+
         function normalizeUserCode(rawCode) {
             const code = rawCode.trim();
             const importStatements = code.match(/^\s*import\s+(?:[^'";]+\s+from\s+)?['"][^'"]+['"];?\s*$/gm) || [];
@@ -612,6 +617,30 @@ catch(e){showError(e);}
 </body></html>`;
         }
 
+        function injectFullscreenShortcutBridge(html) {
+            const bridge = `<script>window.addEventListener('keydown',function(e){if(e.altKey&&e.key==='Enter'){e.preventDefault();window.parent.postMessage('toggleFullscreen','*');}});<\/script>`;
+
+            if (html.includes("window.parent.postMessage('toggleFullscreen','*')")) {
+                return html;
+            }
+
+            if (/<\/body\s*>/i.test(html)) {
+                return html.replace(/<\/body\s*>/i, `${bridge}</body>`);
+            }
+
+            if (/<\/html\s*>/i.test(html)) {
+                return html.replace(/<\/html\s*>/i, `${bridge}</html>`);
+            }
+
+            return `${html}\n${bridge}`;
+        }
+
+        function getPreviewDocument(rawCode) {
+            return detectInputMode(rawCode) === 'html'
+                ? injectFullscreenShortcutBridge(rawCode)
+                : buildPreviewDocument(rawCode);
+        }
+
         /* ── DOWNLOAD ─────────────────────────────────────────── */
 
         function downloadPreview() {
@@ -637,7 +666,7 @@ catch(e){showError(e);}
 
         function renderCode() {
             try {
-                const doc = buildPreviewDocument(editor.value);
+                const doc = getPreviewDocument(editor.value);
                 previewFrame.srcdoc = doc;
                 if (isFullscreen) fullscreenFrame.srcdoc = doc;
             } catch (error) {
