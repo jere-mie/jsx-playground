@@ -71,4 +71,4 @@ jsxcc version
 
 - `../version.txt` is the source of truth for the embedded CLI version.
 - `.github/workflows/release-jsxcc.yml` is the single GitHub Actions workflow for `jsxcc`.
-- The release workflow publishes archives for Linux (`x86_64`, `aarch64`), Windows (`x86_64`), and macOS (`x86_64`, `aarch64`) from one Ubuntu job.
+- The release workflow publishes raw binaries for Linux (`x86_64`, `aarch64`), Windows (`x86_64`), and macOS (`x86_64`, `aarch64`) from one Ubuntu job.
