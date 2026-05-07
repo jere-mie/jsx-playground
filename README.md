@@ -92,8 +92,7 @@ jsxcc serve .\pages --port 5000
 
 - `version.txt` is the source of truth for the CLI version.
 - `jsxcc version` prints the embedded version string.
-- `.github/workflows/jsxcc-ci.yml` runs Zig build/test checks for CLI changes.
-- `.github/workflows/release-jsxcc.yml` reads `version.txt`, builds release archives for Linux (`x86_64`, `aarch64`), Windows (`x86_64`), and macOS (`x86_64`, `aarch64`), and publishes a GitHub release tagged as `v<version>`.
+- `.github/workflows/release-jsxcc.yml` reads `version.txt`, builds release archives for Linux (`x86_64`, `aarch64`), Windows (`x86_64`), and macOS (`x86_64`, `aarch64`) from one Ubuntu job, and publishes a GitHub release tagged as `v<version>`.
 
 ## Local development
 

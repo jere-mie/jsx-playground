@@ -70,5 +70,5 @@ jsxcc version
 ## Versioning and releases
 
 - `../version.txt` is the source of truth for the embedded CLI version.
-- `zig build test` and `zig build -Doptimize=ReleaseSafe` are exercised in CI.
-- The release workflow publishes archives for Linux (`x86_64`, `aarch64`), Windows (`x86_64`), and macOS (`x86_64`, `aarch64`).
+- `.github/workflows/release-jsxcc.yml` is the single GitHub Actions workflow for `jsxcc`.
+- The release workflow publishes archives for Linux (`x86_64`, `aarch64`), Windows (`x86_64`), and macOS (`x86_64`, `aarch64`) from one Ubuntu job.
