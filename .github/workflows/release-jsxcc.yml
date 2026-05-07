@@ -1,0 +1,142 @@
+name: Release jsxcc
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "version.txt"
+      - ".github/workflows/release-jsxcc.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-linux-musl
+            archive_format: tar.gz
+            binary_name: jsxcc
+            platform_name: linux-x86_64
+          - runner: ubuntu-latest
+            target: aarch64-linux-musl
+            archive_format: tar.gz
+            binary_name: jsxcc
+            platform_name: linux-aarch64
+          - runner: windows-latest
+            target: x86_64-windows
+            archive_format: zip
+            binary_name: jsxcc.exe
+            platform_name: windows-x86_64
+          - runner: macos-13
+            target: x86_64-macos
+            archive_format: tar.gz
+            binary_name: jsxcc
+            platform_name: macos-x86_64
+          - runner: macos-14
+            target: aarch64-macos
+            archive_format: tar.gz
+            binary_name: jsxcc
+            platform_name: macos-aarch64
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          version="$(tr -d '\r\n' < version.txt)"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build release binary
+        working-directory: jsxcc
+        shell: bash
+        run: zig build -Doptimize=ReleaseSafe -Dtarget=${{ matrix.target }}
+
+      - name: Stage release files
+        id: stage
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.value }}"
+          base="jsxcc-v${version}-${{ matrix.platform_name }}"
+          stage_dir="release-stage/$base"
+          mkdir -p "$stage_dir"
+          cp "jsxcc/zig-out/bin/${{ matrix.binary_name }}" "$stage_dir/"
+          cp LICENSE "$stage_dir/"
+          cp README.md "$stage_dir/"
+          cp version.txt "$stage_dir/"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Create tar.gz archive
+        if: matrix.archive_format == 'tar.gz'
+        shell: bash
+        run: |
+          base="${{ steps.stage.outputs.base }}"
+          tar -C release-stage -czf "${base}.tar.gz" "$base"
+
+      - name: Create zip archive
+        if: matrix.archive_format == 'zip'
+        shell: pwsh
+        run: |
+          $base = '${{ steps.stage.outputs.base }}'
+          Compress-Archive -Path "release-stage\$base\*" -DestinationPath "$base.zip" -Force
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.stage.outputs.base }}
+          path: |
+            *.tar.gz
+            *.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          version="$(tr -d '\r\n' < version.txt)"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="v${{ steps.version.outputs.value }}"
+          shopt -s nullglob
+          files=(release-assets/*)
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            gh release create "$tag" "${files[@]}" \
+              --title "jsxcc $tag" \
+              --notes "Automated jsxcc release from version.txt." \
+              --target "$GITHUB_SHA"
+          fi

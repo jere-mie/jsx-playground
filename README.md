@@ -44,6 +44,57 @@ Other packages are not available in the sandbox (no Node.js, no npm).
 4. The transpiled code is injected into an `<iframe>` as an ES module with an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) pointing to [esm.sh](https://esm.sh) CDN.
 5. React mounts the default export into `#root` via `createRoot`.
 
+## `jsxcc` CLI
+
+The repository now includes `jsxcc/`, a Zig CLI that turns single-file JSX into standalone HTML without Node.js or npm. The generated HTML keeps the same CDN-based model as the playground: React, Tailwind, Babel Standalone, and supported packages are loaded in the browser, so the CLI itself ships as a single binary with no runtime dependencies.
+
+### CLI features
+
+| Command | What it does |
+|---|---|
+| `jsxcc build <file>` | Convert one JSX/JS/TSX/TS file into standalone HTML |
+| `jsxcc build <directory>` | Recursively build a directory, preserve structure, and copy non-JSX assets |
+| `jsxcc serve <file-or-directory>` | Run a live server that renders JSX on request and reloads when the source changes |
+| `jsxcc version` | Print the version embedded from `version.txt` |
+
+### Build the CLI locally
+
+```bash
+cd jsxcc
+zig build -Doptimize=ReleaseSafe
+```
+
+Binary output:
+
+- Windows: `jsxcc\zig-out\bin\jsxcc.exe`
+- macOS / Linux: `jsxcc/zig-out/bin/jsxcc`
+
+### CLI usage
+
+```bash
+jsxcc build .\demo.jsx
+jsxcc build .\pages -o .\dist
+jsxcc build .\demo.jsx --stdout > demo.html
+
+jsxcc serve .\demo.jsx
+jsxcc serve .\pages --port 5000
+```
+
+### Live server behavior
+
+- Directory targets behave like a normal file server with directory listings.
+- Clicking a `.jsx`, `.js`, `.tsx`, or `.ts` entry renders built HTML instead of raw source.
+- HTML files are passed through as HTML.
+- The server starts at port `4173` by default and keeps incrementing until it finds an open port.
+- `--port` or `JSXCC_PORT` can change the starting port. `JSXCC_HOST` can change the bind host.
+
+### Versioning and releases
+
+- `version.txt` is the source of truth for the CLI version.
+- `jsxcc version` prints the embedded version string.
+- `.github/workflows/jsxcc-ci.yml` runs Zig build/test checks for CLI changes.
+- `.github/workflows/release-jsxcc.yml` reads `version.txt`, builds release archives for Linux (`x86_64`, `aarch64`), Windows (`x86_64`), and macOS (`x86_64`, `aarch64`), and publishes a GitHub release tagged as `v<version>`.
+
 ## Local development
 
 Any static file server works:
