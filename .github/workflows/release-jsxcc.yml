@@ -45,7 +45,10 @@ jobs:
 
           while IFS='|' read -r target platform_name binary_name archive_format; do
             [ -n "$target" ] || continue
-            zig build -Doptimize=ReleaseSafe -Dtarget="$target"
+            (
+              cd jsxcc
+              zig build -Doptimize=ReleaseSafe -Dtarget="$target"
+            )
 
             base="jsxcc-v${version}-${platform_name}"
             stage_dir="release-stage/$base"
