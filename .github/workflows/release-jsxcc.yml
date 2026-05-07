@@ -7,51 +7,26 @@ on:
       - main
     paths:
       - "version.txt"
+      - ".github/actions/setup-zig-direct/**"
       - ".github/workflows/release-jsxcc.yml"
 
 permissions:
   contents: write
 
-jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            target: x86_64-linux-musl
-            archive_format: tar.gz
-            binary_name: jsxcc
-            platform_name: linux-x86_64
-          - runner: ubuntu-latest
-            target: aarch64-linux-musl
-            archive_format: tar.gz
-            binary_name: jsxcc
-            platform_name: linux-aarch64
-          - runner: windows-latest
-            target: x86_64-windows
-            archive_format: zip
-            binary_name: jsxcc.exe
-            platform_name: windows-x86_64
-          - runner: macos-13
-            target: x86_64-macos
-            archive_format: tar.gz
-            binary_name: jsxcc
-            platform_name: macos-x86_64
-          - runner: macos-14
-            target: aarch64-macos
-            archive_format: tar.gz
-            binary_name: jsxcc
-            platform_name: macos-aarch64
+concurrency:
+  group: release-jsxcc-${{ github.ref }}
+  cancel-in-progress: true
 
-    runs-on: ${{ matrix.runner }}
+jobs:
+  release:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Zig
-        uses: mlugg/setup-zig@v2
+        uses: ./.github/actions/setup-zig-direct
         with:
           version: 0.15.2
 
@@ -62,67 +37,42 @@ jobs:
           version="$(tr -d '\r\n' < version.txt)"
           echo "value=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Build release binary
-        working-directory: jsxcc
-        shell: bash
-        run: zig build -Doptimize=ReleaseSafe -Dtarget=${{ matrix.target }}
-
-      - name: Stage release files
-        id: stage
+      - name: Build release archives
         shell: bash
         run: |
           version="${{ steps.version.outputs.value }}"
-          base="jsxcc-v${version}-${{ matrix.platform_name }}"
-          stage_dir="release-stage/$base"
-          mkdir -p "$stage_dir"
-          cp "jsxcc/zig-out/bin/${{ matrix.binary_name }}" "$stage_dir/"
-          cp LICENSE "$stage_dir/"
-          cp README.md "$stage_dir/"
-          cp version.txt "$stage_dir/"
-          echo "base=$base" >> "$GITHUB_OUTPUT"
+          rm -rf release-stage release-assets
+          mkdir -p release-stage release-assets
 
-      - name: Create tar.gz archive
-        if: matrix.archive_format == 'tar.gz'
-        shell: bash
-        run: |
-          base="${{ steps.stage.outputs.base }}"
-          tar -C release-stage -czf "${base}.tar.gz" "$base"
+          while IFS='|' read -r target platform_name binary_name archive_format; do
+            [ -n "$target" ] || continue
+            zig build -Doptimize=ReleaseSafe -Dtarget="$target"
 
-      - name: Create zip archive
-        if: matrix.archive_format == 'zip'
-        shell: pwsh
-        run: |
-          $base = '${{ steps.stage.outputs.base }}'
-          Compress-Archive -Path "release-stage\$base\*" -DestinationPath "$base.zip" -Force
+            base="jsxcc-v${version}-${platform_name}"
+            stage_dir="release-stage/$base"
+            rm -rf "$stage_dir"
+            mkdir -p "$stage_dir"
 
-      - name: Upload release artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.stage.outputs.base }}
-          path: |
-            *.tar.gz
-            *.zip
+            cp "jsxcc/zig-out/bin/${binary_name}" "$stage_dir/"
+            cp LICENSE "$stage_dir/"
+            cp "jsxcc/README.md" "$stage_dir/README.md"
+            cp version.txt "$stage_dir/"
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-assets
-          merge-multiple: true
-
-      - name: Read version
-        id: version
-        shell: bash
-        run: |
-          version="$(tr -d '\r\n' < version.txt)"
-          echo "value=$version" >> "$GITHUB_OUTPUT"
+            if [ "$archive_format" = "tar.gz" ]; then
+              tar -C release-stage -czf "release-assets/${base}.tar.gz" "$base"
+            else
+              (
+                cd release-stage
+                zip -qr "../release-assets/${base}.zip" "$base"
+              )
+            fi
+          done <<'TARGETS'
+          x86_64-linux-musl|linux-x86_64|jsxcc|tar.gz
+          aarch64-linux-musl|linux-aarch64|jsxcc|tar.gz
+          x86_64-windows|windows-x86_64|jsxcc.exe|zip
+          x86_64-macos|macos-x86_64|jsxcc|tar.gz
+          aarch64-macos|macos-aarch64|jsxcc|tar.gz
+          TARGETS
 
       - name: Publish GitHub release
         env:

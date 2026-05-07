@@ -1,0 +1,69 @@
+name: Setup Zig Direct
+description: Install Zig directly from ziglang.org without third-party mirror discovery.
+
+inputs:
+  version:
+    description: Zig version to install.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Zig
+      shell: pwsh
+      run: |
+        $version = '${{ inputs.version }}'
+        $runnerOs = $env:RUNNER_OS.ToLowerInvariant()
+        $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+
+        switch ("$runnerOs/$arch") {
+          'windows/x64' {
+            $hostTriple = 'x86_64-windows'
+            $archiveExtension = 'zip'
+          }
+          'linux/x64' {
+            $hostTriple = 'x86_64-linux'
+            $archiveExtension = 'tar.xz'
+          }
+          'linux/arm64' {
+            $hostTriple = 'aarch64-linux'
+            $archiveExtension = 'tar.xz'
+          }
+          'macos/x64' {
+            $hostTriple = 'x86_64-macos'
+            $archiveExtension = 'tar.xz'
+          }
+          'macos/arm64' {
+            $hostTriple = 'aarch64-macos'
+            $archiveExtension = 'tar.xz'
+          }
+          default {
+            throw "Unsupported runner platform: $runnerOs/$arch"
+          }
+        }
+
+        $archiveName = "zig-$hostTriple-$version.$archiveExtension"
+        $downloadUrl = "https://ziglang.org/download/$version/$archiveName"
+        $installRoot = Join-Path $env:RUNNER_TEMP "zig-$hostTriple-$version"
+
+        if (Test-Path $installRoot) {
+          Remove-Item -Path $installRoot -Recurse -Force
+        }
+
+        New-Item -ItemType Directory -Path $installRoot | Out-Null
+
+        $archivePath = Join-Path $installRoot $archiveName
+        Invoke-WebRequest -Uri $downloadUrl -OutFile $archivePath
+
+        if ($archiveExtension -eq 'zip') {
+          Expand-Archive -Path $archivePath -DestinationPath $installRoot -Force
+        } else {
+          tar -xf $archivePath -C $installRoot
+        }
+
+        $zigDir = Get-ChildItem -Path $installRoot -Directory | Select-Object -First 1
+        if ($null -eq $zigDir) {
+          throw "Failed to locate extracted Zig directory in $installRoot"
+        }
+
+        Add-Content -Path $env:GITHUB_PATH -Value $zigDir.FullName

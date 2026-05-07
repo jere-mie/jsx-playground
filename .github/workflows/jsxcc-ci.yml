@@ -5,6 +5,7 @@ on:
     paths:
       - "jsxcc/**"
       - "version.txt"
+      - ".github/actions/setup-zig-direct/**"
       - ".github/workflows/jsxcc-ci.yml"
   push:
     branches:
@@ -12,6 +13,7 @@ on:
     paths:
       - "jsxcc/**"
       - "version.txt"
+      - ".github/actions/setup-zig-direct/**"
       - ".github/workflows/jsxcc-ci.yml"
 
 jobs:
@@ -31,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Zig
-        uses: mlugg/setup-zig@v2
+        uses: ./.github/actions/setup-zig-direct
         with:
           version: 0.15.2
 
